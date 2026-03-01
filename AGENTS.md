@@ -17,22 +17,14 @@ Reddit scout for buying signals. Scans, scores, and emails reports via Brevo.
 - `reddit_scout.py`: Main logic & scoring.
 - `scripts/reddit_api.py`: Reddit API wrapper.
 
-## Setup & Deployment Workflow (Agent-Led)
-If the user wants to set up needle, guide them through these steps:
+## config.json
+`keyword_searches`: pain-point phrases sent to Reddit search. `subreddits`: `[name, limit]` pairs scanned via /new. `relevance_keywords`: `[keyword, weight]` pairs — weights 3/2/1 (strong/medium/weak). `skip_patterns`: regex strings, matched case-insensitive.
 
-1. **Credentials (User Action Required)**: 
-   - Tell the user to `cp .env.example .env.local`.
-   - Instruct the user to open `.env.local` and paste their `BREVO_API_KEY` manually.
-   - **IMPORTANT:** Never ask the user to provide the key in the chat. Keep secrets local.
-2. **Configuration**:
-   - Read `config.json`. 
-   - Ask the user for their business niche to suggest/update `keyword_searches` and `subreddits`.
-3. **Execution Permissions**:
-   - Ensure `run.sh` is executable (`chmod +x run.sh`).
-4. **Automation (Cron)**:
-   - Identify the absolute path to `run.sh` using `pwd`.
-   - Provide the exact crontab line: `0 9,12,15 * * * /absolute/path/to/run.sh`.
-   - Instruct the user to run `crontab -e` and paste the line.
-5. **Validation**:
-   - Ask the user to run `./run.sh` once to verify the setup.
-   - Tail `run.log` to confirm success.
+**The repo ships with demo data (freelance invoicing niche). Replace `keyword_searches`, `subreddits`, and `relevance_keywords` before first run.**
+
+## Setup & Deployment Workflow (Agent-Led)
+1. **Credentials**: `cp .env.example .env.local` → user fills in `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`. Never ask for the key in chat.
+2. **Config**: Ask "What's your product and what problem does it solve?" → suggest 6–10 `keyword_searches` (pain language, not solution language) and 4–6 subreddits → update `config.json`.
+3. **Permissions**: `chmod +x run.sh`
+4. **Cron**: `0 9,12,15 * * * /absolute/path/to/run.sh` → `crontab -e`
+5. **Validate**: `./run.sh` → check `run.log`

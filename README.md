@@ -46,16 +46,20 @@ FROM_EMAIL="scout@yourdomain.com"  # verified sender address in Brevo
 TO_EMAIL="you@yourdomain.com"      # where reports are sent
 ```
 
-### 4. Customize keywords
+### 4. Customize keywords — **this is the most important step**
 
-The easiest way to configure needle is using the built-in **Visual Editor**:
+> **The `config.json` in this repo contains demo data** for a freelance invoicing tool.
+> Before your first run, replace the keywords and subreddits with ones that match your product.
+> Without this step, the reports will be relevant to someone else's business.
+
+The easiest way is the built-in **Visual Editor**:
 
 1. Open `setup.html` in your browser.
-2. Load your current `config.json`.
-3. Adjust `keyword_searches`, `subreddits`, and `settings` for your business.
-4. Download the updated `config.json`.
+2. Click **Import config.json** and load your file.
+3. Replace `keyword_searches` and `subreddits` for your niche.
+4. Click **Save config.json** and overwrite the file.
 
-Alternatively, edit `config.json` manually - or ask your favorite LLM to help you. just point the the @AGENTS.md file. 
+Alternatively, edit `config.json` directly — or point your LLM at `AGENTS.md` and ask it to suggest keywords for your product.
 
 ### 5. Set up cron
 
