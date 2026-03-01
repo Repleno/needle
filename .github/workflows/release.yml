@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
   release:
@@ -15,20 +15,53 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate release notes
+      - name: Bump version and release
         run: |
           python3 - <<'EOF'
-          import subprocess, re, os
+          import subprocess, re, os, sys
 
-          # Commits since last tag (or all commits if first release)
-          tags = subprocess.getoutput("git tag --sort=-version:refname").splitlines()
-          current = subprocess.getoutput("git describe --tags --abbrev=0")
-          prev = next((t for t in tags if t != current), None)
-          log_range = f"{prev}..HEAD" if prev else "HEAD"
+          def run(cmd):
+              return subprocess.getoutput(cmd).strip()
 
-          raw = subprocess.getoutput(f"git log {log_range} --pretty=format:%s")
-          commits = [c.strip() for c in raw.splitlines() if c.strip()]
+          # Get latest tag
+          latest = run("git describe --tags --abbrev=0 2>/dev/null")
+          log_range = f"{latest}..HEAD" if latest else "HEAD"
 
+          commits = [c for c in run(f"git log {log_range} --pretty=format:%s").splitlines() if c]
+          if not commits:
+              print("No new commits since last tag — skipping.")
+              sys.exit(0)
+
+          # Determine bump level
+          bump = None
+          for msg in commits:
+              if "BREAKING CHANGE" in msg or re.match(r"^[a-z]+!:", msg):
+                  bump = "major"
+                  break
+              if re.match(r"^feat[\(:]", msg) and bump != "major":
+                  bump = "minor"
+              if re.match(r"^(fix|chore|docs|refactor|perf|test|style)[\(:]", msg) and bump is None:
+                  bump = "patch"
+
+          if bump is None:
+              print("No releasable commits — skipping.")
+              sys.exit(0)
+
+          # Calculate next version
+          if latest:
+              m = re.match(r"v?(\d+)\.(\d+)\.(\d+)", latest)
+              major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+          else:
+              major, minor, patch = 0, 1, 0
+
+          if bump == "major":   major += 1; minor = 0; patch = 0
+          elif bump == "minor": minor += 1; patch = 0
+          else:                 patch += 1
+
+          version = f"v{major}.{minor}.{patch}"
+          print(f"Bumping {bump}: {latest or 'none'} → {version}")
+
+          # Generate release notes
           sections = {
               "feat":     ("🚀 Features",     []),
               "fix":      ("🐛 Bug Fixes",     []),
@@ -38,8 +71,7 @@ jobs:
               "chore":    ("🔧 Maintenance",   []),
               "test":     ("🧪 Tests",         []),
           }
-          breaking = []
-          other = []
+          breaking, other = [], []
 
           for msg in commits:
               if "BREAKING CHANGE" in msg or re.match(r"^[a-z]+!:", msg):
@@ -53,25 +85,34 @@ jobs:
 
           lines = []
           if breaking:
-              lines.append("## ⚠️ Breaking Changes")
-              lines += [f"- {c}" for c in breaking]
-              lines.append("")
-          for key, (title, items) in sections.items():
+              lines += ["## ⚠️ Breaking Changes"] + [f"- {c}" for c in breaking] + [""]
+          for _, (title, items) in sections.items():
               if items:
-                  lines.append(f"## {title}")
-                  lines += [f"- {c}" for c in items]
-                  lines.append("")
+                  lines += [f"## {title}"] + [f"- {c}" for c in items] + [""]
           if other:
-              lines.append("## 📦 Other Changes")
-              lines += [f"- {c}" for c in other]
-              lines.append("")
+              lines += ["## 📦 Other"] + [f"- {c}" for c in other] + [""]
 
-          notes = "\n".join(lines).strip() or "No changes documented."
+          notes = "\n".join(lines).strip()
           with open("release_notes.md", "w") as f:
               f.write(notes)
-          print(notes)
+
+          # Write version to env file for next step
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"RELEASE_VERSION={version}\n")
           EOF
 
+      - name: Create tag and release
+        if: env.RELEASE_VERSION != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$RELEASE_VERSION"
+          git push origin "$RELEASE_VERSION"
+
       - uses: softprops/action-gh-release@v2
+        if: env.RELEASE_VERSION != ''
         with:
+          tag_name: ${{ env.RELEASE_VERSION }}
           body_path: release_notes.md
