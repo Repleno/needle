@@ -1,5 +1,7 @@
 # needle
 
+**⚠️ Linux & macOS only.** (No Windows support)
+
 ![needle](foundtheneedle.png)
 
 > Find the needle in the haystack. Daily Reddit scanner that surfaces buying signals before people know they need you.
@@ -8,6 +10,12 @@ Runs locally via cron — no cloud, no IP blocks.
 Results land in your inbox every morning as an email report with a clean, branded UI.
 
 ---
+
+## The backstory
+
+I'm a founder. I know the drill: you need to find customers, but you don't want to spend €50/month on a "social listening" tool that just shows you a bunch of noise. I wanted something simple, local, and free that just works on my own machine. So I built needle for Linux and Mac.
+
+It's not a SaaS. It's a script that runs on your machine. No monthly subscriptions, no data selling, just the buying signals you actually care about.
 
 ## The idea
 
@@ -131,7 +139,7 @@ Check `run.log` for output. You should receive the first email within seconds.
 
 ## Reading the report
 
-Each post gets a score based on weighted keywords in title, body, and subreddit:
+Each post gets a score based on weighted keywords in title, body, and subreddit. **The best part: You define the scoring logic yourself.** By adjusting keywords and weights in your config, you train the engine to find exactly what you're looking for.
 
 - 🟢 **Score 15–20** — strong signal, reach out immediately
 - 🟡 **Score 8–14** — worth checking if it's a fit
@@ -180,15 +188,16 @@ On quiet days you still get a "Quiet day" email — so you know the scout ran.
 Edit your crontab (`crontab -e`) and adjust the hours to your local timezone.
 `0 9,12,15 * * *` = three daily attempts, sends once on first success. [Cron syntax explained](https://crontab.guru).
 
-### Custom scoring keywords
+### Custom scoring & keywords
 
-Override the default scoring keywords and skip patterns in `config.json`:
+**You are the engine.** You can fully customize which keywords add points and which ones subtract them. Override the default scoring weights and skip patterns in `config.json`:
 
 ```json
 "settings": {
   "relevance_keywords": [
-    ["your keyword", 3],
-    ["another keyword", 2]
+    ["your keyword", 5],    // adds 5 points if found
+    ["competitor", -10],    // subtracts 10 points
+    ["another one", 2]
   ],
   "skip_patterns": [
     "\\[hiring\\]",
@@ -197,7 +206,7 @@ Override the default scoring keywords and skip patterns in `config.json`:
 }
 ```
 
-Once you recognize a pattern — certain subreddits or phrases that consistently deliver — update your `config.json` via the visual editor. The scout improves with every iteration.
+Once you recognize a pattern — certain subreddits or phrases that consistently deliver — update your `config.json` via the visual editor. The scout improves with every iteration as you fine-tune the ratings.
 
 ---
 
@@ -233,4 +242,4 @@ You still get a "Quiet day" email — so you know the scout ran. Tune your keywo
 
 ---
 
-*Built with love by a german founder · [needle](https://github.com/Repleno/needle)*
+*Built with ❤️ by a german founder who refused to pay €50/month for social listening tools. · [needle](https://github.com/Repleno/needle)*
