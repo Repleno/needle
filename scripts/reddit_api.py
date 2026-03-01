@@ -16,7 +16,7 @@ _UA      = "needle-scout/1.0 (github.com/Repleno/needle)"
 
 def api_get(path: str, params: dict = None) -> dict:
     """Make a GET request to the Reddit public JSON API."""
-    url = f"{BASE_URL}/{path}.json"
+    url = f"{BASE_URL}/{urllib.parse.quote(path, safe='/')}.json"
     merged = {"raw_json": "1"}
     if params:
         merged.update({k: v for k, v in params.items() if v is not None})
