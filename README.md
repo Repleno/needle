@@ -1,9 +1,27 @@
 # needle
 
+![needle](foundtheneedle.png)
+
 > Find the needle in the haystack. Daily Reddit scanner that surfaces buying signals before people know they need you.
 
 Runs locally via cron — no cloud, no IP blocks.
 Results land in your inbox every morning as an email report with a clean, branded UI.
+
+---
+
+## The idea
+
+Reddit is full of people who are describing your problem right now. Not in a product forum. Not on your landing page. In a real conversation with other founders, freelancers, or professionals — before they even know a solution exists.
+
+needle finds these posts automatically every morning and sends them to you by email.
+
+Your job: show up, answer as an expert, not as a salesperson.
+
+## Why this works
+
+Search Reddit for `"track client hours spreadsheet"` or `"forgot to log hours"`. You'll find real posts from real people with real pain. No marketing fluff, no polite euphemisms.
+
+These people weren't looking for a solution — they were sharing their problem. That's your entry point. A genuine, helpful reply from someone who knows the topic is the opposite of cold outreach.
 
 ---
 
@@ -38,10 +56,10 @@ cp .env.example .env.local
 chmod 600 .env.local
 ```
 
-Edit `.env.local` with your values. Note: `run.sh` automatically loads and exports these variables to the script.
+Edit `.env.local` with your values. `run.sh` automatically loads and exports these to the script.
 
 ```bash
-BREVO_API_KEY="xkeysib-..."   # Brevo API key
+BREVO_API_KEY="xkeysib-..."        # Brevo API key
 FROM_EMAIL="scout@yourdomain.com"  # verified sender address in Brevo
 TO_EMAIL="you@yourdomain.com"      # where reports are sent
 ```
@@ -52,6 +70,15 @@ TO_EMAIL="you@yourdomain.com"      # where reports are sent
 > Before your first run, replace the keywords and subreddits with ones that match your product.
 > Without this step, the reports will be relevant to someone else's business.
 
+**Core principle: search for pain words, not solution words.**
+
+| ❌ Solution word | ✅ Pain word |
+|-----------------|-------------|
+| time tracking software | forgot to log hours |
+| invoicing tool | freelance invoicing chaos |
+| billing app | manual time tracking |
+| inventory tool | out of stock again |
+
 The easiest way is the built-in **Visual Editor**:
 
 1. Open `setup.html` in your browser.
@@ -61,6 +88,11 @@ The easiest way is the built-in **Visual Editor**:
 
 Alternatively, edit `config.json` directly — or point your LLM at `AGENTS.md` and ask it to suggest keywords for your product.
 
+**How to find good keywords:**
+- Read 10 posts in relevant subreddits — which phrases keep coming up?
+- Ask your existing customers: "How did you describe this problem before you used us?"
+- Use everyday language, not jargon.
+
 ### 5. Set up cron
 
 ```bash
@@ -68,7 +100,7 @@ chmod +x run.sh
 crontab -e
 ```
 
-Add this line — `run.sh` sends once per day and retries on failure.  
+Add this line — `run.sh` sends once per day and retries on failure.
 **Tip:** Use `pwd` in your terminal to get the full path to the `needle` folder.
 
 ```
@@ -76,7 +108,6 @@ Add this line — `run.sh` sends once per day and retries on failure.
 ```
 
 > Times are in your **system timezone** (check with `timedatectl`).
-> Adjust hours so the runs land when you want them — e.g. 10:00, 13:00, 16:00 local time.
 
 ### 6. Test run
 
@@ -88,30 +119,45 @@ Check `run.log` for output. You should receive the first email within seconds.
 
 ---
 
-## Scoring
+## Reading the report
 
-Each post gets a score based on weighted keywords in the title, body, and subreddit:
+Each post gets a score based on weighted keywords in title, body, and subreddit:
 
-- 🟢 **Score 15–20** — high relevance, reach out immediately
+- 🟢 **Score 15–20** — strong signal, reach out immediately
 - 🟡 **Score 8–14** — worth checking if it's a fit
 - ⚪ **Score 5–7** — weak signal
 - Posts below 5 are not shown
 
-### Filters & Penalties
-- **Astroturfing protection (-5):** Posts that look like ads (specific product name + 3+ features + positive conclusion) are automatically penalized.
-- **Young account penalty (-2):** Posts from accounts under 30 days old are penalized.
-- **Skip patterns:** Posts matching phrases like `[hiring]` or `for sale` are ignored.
-- **Deduplication:** Sent posts won't appear again for 7 days (TTL) using a timestamped tracking system.
+**Automatic filters:**
+- **Astroturfing (-5):** Posts that look like ads (product name + 3+ features + positive conclusion) are penalized.
+- **Young account (-2):** Accounts under 30 days old are penalized.
+- **Skip patterns:** Posts matching `[hiring]`, `for sale`, etc. are ignored.
+- **Deduplication:** Same post won't appear again for 7 days.
+
+On quiet days you still get a "Quiet day" email — so you know the scout ran.
 
 ---
 
-## Reply strategy
+## How to reply
 
-You are **not** the salesperson — you are the expert.
+**Goal: build trust, don't sell.**
 
-**Bad:** "Hey, check out my tool!"
+1. Show you understand the problem (1 sentence).
+2. Give a genuine, useful answer — even if your tool isn't the solution.
+3. If it fits: mention it briefly at the end, without pressure.
 
-**Good:** Answer the problem honestly. Explain how others solve it. If your tool fits, mention it briefly at the end.
+**Example:**
+
+> Post: "We still manage our client hours with Excel and it's getting messy. Anyone have a better solution?"
+
+**Bad:** "Check out MyTool, it solves exactly that!"
+
+**Good:** "I know this well — Excel breaks down at a certain scale because you forget to log hours manually. What usually helps as a first step: set up a dedicated reminder at the end of each day. Otherwise, the chaos moves into any tool you use. If you do want a tool: we're building something exactly for this — happy to show you what we have."
+
+**Common mistakes:**
+- **Selling too early.** If your first sentence contains a link, it looks like spam.
+- **Generic replies.** "Great question! Have you considered time tracking?" — this smells like a bot.
+- **Keyword inflation.** 10 precise keywords beat 50 broad ones.
 
 ---
 
@@ -124,7 +170,8 @@ Edit your crontab (`crontab -e`) and adjust the hours to your local timezone.
 
 ### Custom scoring keywords
 
-You can override the default scoring keywords and filters in `config.json`:
+Override the default scoring keywords and skip patterns in `config.json`:
+
 ```json
 "settings": {
   "relevance_keywords": [
@@ -138,6 +185,8 @@ You can override the default scoring keywords and filters in `config.json`:
 }
 ```
 
+Once you recognize a pattern — certain subreddits or phrases that consistently deliver — update your `config.json` via the visual editor. The scout improves with every iteration.
+
 ---
 
 ## Project structure
@@ -147,12 +196,11 @@ reddit_scout.py          ← Main script (scoring, astroturfing detection)
 config.json              ← Keywords, subreddits, settings, email addresses
 setup.html               ← Visual config editor (open locally in browser)
 logo.svg                 ← Project logo (included in email reports)
-seen_posts.json          ← Deduplication tracking (timestamp-based TTL)
 run.sh                   ← Cron wrapper: runs once per day, retries on failure
 .env.example             ← Credentials template (copy to .env.local)
-test_scoring.py          ← Scoring logic unit tests
+tests/                   ← Unit tests (scoring, filtering, HTML, config)
 scripts/
-  reddit_api.py          ← Reddit Public API (standard urllib, no dependencies)
+  reddit_api.py          ← Reddit Public API (stdlib only, no dependencies)
 ```
 
 ---
@@ -169,8 +217,8 @@ The script itself is free. Brevo: free up to 300 emails/day.
 Reddit blocks GitHub Actions IP ranges with HTTP 403. Running locally avoids this.
 
 **What if nothing is found on a given day?**
-You still get a "Quiet day" email — so you know the scout ran. Tune your keywords, add different subs, or check your threshold.
+You still get a "Quiet day" email — so you know the scout ran. Tune your keywords, add different subs, or lower your threshold.
 
 ---
 
-*Built with love by a german founder  [needle](https://github.com/Repleno/needle)*
+*Built with love by a german founder · [needle](https://github.com/Repleno/needle)*
