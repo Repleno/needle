@@ -25,6 +25,16 @@ These people weren't looking for a solution — they were sharing their problem.
 
 ---
 
+## Quickstart
+
+```bash
+git clone https://github.com/Repleno/needle.git && cd needle
+```
+
+Or let your AI assistant handle the setup — just point it at `SETUP.md`.
+
+---
+
 ## Requirements
 
 - Linux or macOS machine that's on during the day

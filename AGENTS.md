@@ -22,9 +22,5 @@ Reddit scout for buying signals. Scans, scores, and emails reports via Brevo.
 
 **The repo ships with demo data (freelance invoicing niche). Replace `keyword_searches`, `subreddits`, and `relevance_keywords` before first run.**
 
-## Setup & Deployment Workflow (Agent-Led)
-1. **Credentials**: `cp .env.example .env.local` → user fills in `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`. Never ask for the key in chat.
-2. **Config**: Ask "What's your product and what problem does it solve?" → suggest 6–10 `keyword_searches` (pain language, not solution language) and 4–6 subreddits → update `config.json`.
-3. **Permissions**: `chmod +x run.sh`
-4. **Cron**: `0 9,12,15 * * * /absolute/path/to/run.sh` → `crontab -e`
-5. **Validate**: `./run.sh` → check `run.log`
+## First-time setup
+Read `SETUP.md` and follow the steps there.
