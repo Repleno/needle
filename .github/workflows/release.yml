@@ -12,6 +12,66 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        run: |
+          python3 - <<'EOF'
+          import subprocess, re, os
+
+          # Commits since last tag (or all commits if first release)
+          tags = subprocess.getoutput("git tag --sort=-version:refname").splitlines()
+          current = subprocess.getoutput("git describe --tags --abbrev=0")
+          prev = next((t for t in tags if t != current), None)
+          log_range = f"{prev}..HEAD" if prev else "HEAD"
+
+          raw = subprocess.getoutput(f"git log {log_range} --pretty=format:%s")
+          commits = [c.strip() for c in raw.splitlines() if c.strip()]
+
+          sections = {
+              "feat":     ("🚀 Features",     []),
+              "fix":      ("🐛 Bug Fixes",     []),
+              "perf":     ("⚡ Performance",   []),
+              "docs":     ("📚 Documentation", []),
+              "refactor": ("♻️  Refactoring",  []),
+              "chore":    ("🔧 Maintenance",   []),
+              "test":     ("🧪 Tests",         []),
+          }
+          breaking = []
+          other = []
+
+          for msg in commits:
+              if "BREAKING CHANGE" in msg or re.match(r"^[a-z]+!:", msg):
+                  breaking.append(re.sub(r"^[^:]+!?:\s*", "", msg))
+                  continue
+              m = re.match(r"^([a-z]+)(?:\([^)]+\))?:\s*(.+)", msg)
+              if m and m.group(1) in sections:
+                  sections[m.group(1)][1].append(m.group(2))
+              else:
+                  other.append(msg)
+
+          lines = []
+          if breaking:
+              lines.append("## ⚠️ Breaking Changes")
+              lines += [f"- {c}" for c in breaking]
+              lines.append("")
+          for key, (title, items) in sections.items():
+              if items:
+                  lines.append(f"## {title}")
+                  lines += [f"- {c}" for c in items]
+                  lines.append("")
+          if other:
+              lines.append("## 📦 Other Changes")
+              lines += [f"- {c}" for c in other]
+              lines.append("")
+
+          notes = "\n".join(lines).strip() or "No changes documented."
+          with open("release_notes.md", "w") as f:
+              f.write(notes)
+          print(notes)
+          EOF
+
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release_notes.md
