@@ -11,7 +11,7 @@ Reddit scout for buying signals. Scans, scores, and emails reports via Brevo.
 1. **Zero Dependencies**: Use `urllib` and `json`. Do not add external packages.
 2. **Logic Integrity**: Any change to scoring/filtering in `reddit_scout.py` MUST be verified via `tests/test_scoring.py`.
 3. **Config Safety**: Do not break the `config.json` structure; it is shared with `setup.html`.
-4. **Secrets Management**: NEVER ask for, log, or handle the `BREVO_API_KEY`. Instruct the user to edit `.env.local` manually.
+4. **Secrets Management**: NEVER read `.env.local` or any file containing credentials. NEVER ask the user to paste a key into the chat. Instruct the user to edit `.env.local` manually in their editor.
 
 ## Entry Points
 - `reddit_scout.py`: Main logic & scoring.

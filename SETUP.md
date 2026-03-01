@@ -17,7 +17,9 @@ Tell the user to run:
 cp .env.example .env.local
 chmod 600 .env.local
 ```
-Then open `.env.local` and fill in `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`. **Never ask for the key in chat.**
+Then open `.env.local` and fill in `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`.
+
+**NEVER read `.env.local` or any credential file. Never ask the user to paste a key into the chat. Credentials are the user's responsibility — your job ends at telling them which file to edit.**
 
 ## Step 3 — Permissions
 ```bash
