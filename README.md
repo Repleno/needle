@@ -231,6 +231,16 @@ scripts/
 **Do I need a Reddit account?**
 No. The script uses Reddit's public JSON API without authentication.
 
+**Is this legal? Can Reddit come after me?**
+Grey area, but the risk is very low at needle's scale. Reddit's Developer Terms technically require OAuth authentication, but the public `.json` endpoints (appending `.json` to any Reddit URL) have existed as an unofficial API for years and are widely used.
+
+What can realistically happen:
+- **IP throttling or block** — the most likely scenario if you hammer their servers. Needle makes a handful of requests per day, so this is unlikely.
+- **Nothing** — at needle's volume (a few subreddits, once a day) you fly well under the radar.
+- **Legal action** — extremely unlikely. Reddit pursues commercial scrapers and data resellers, not a local cron job finding 5 posts a day.
+
+To stay in the clear: keep your cron to 1–3 runs per day, don't remove the `time.sleep()` calls between requests, and don't run needle from cloud IP ranges (GitHub Actions, AWS, etc.) — those get blocked anyway.
+
 **Does it cost anything?**
 The script itself is free. Brevo: free up to 300 emails/day.
 
