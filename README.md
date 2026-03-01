@@ -158,6 +158,8 @@ On quiet days you still get a "Quiet day" email — so you know the scout ran.
 - **Selling too early.** If your first sentence contains a link, it looks like spam.
 - **Generic replies.** "Great question! Have you considered time tracking?" — this smells like a bot.
 - **Keyword inflation.** 10 precise keywords beat 50 broad ones.
+- **Skipping the education.** Educate first, sell later. Reddit users are allergic to sales pitches — if you lead with value, they'll ask about your product themselves.
+- **Using AI to write your replies.** People on Reddit can smell it instantly. Write in your own voice. Imperfect and human beats polished and robotic every time.
 
 ---
 
