@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Scout (local test)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/reddit_scout.py",
+      "env": {
+        "BREVO_API_KEY": "${env:BREVO_API_KEY}",
+        "FROM_EMAIL": "${env:FROM_EMAIL}",
+        "TO_EMAIL": "${env:TO_EMAIL}"
+      },
+      "console": "integratedTerminal"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Runtime state — persists locally, not committed
+seen_posts.json
+run.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Credentials — never commit
+.env
+.env.local
+
+# VS Code local state
+.vscode/*.log
+
+# macOS
+.DS_Store

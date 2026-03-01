@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="needleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a5b4fc" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+    <linearGradient id="signalGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    
+    <!-- Glow Effect -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowStrong" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGradient)" />
+  
+  <!-- Radar / Haystack Abstraction -->
+  <g transform="translate(256, 256)">
+    <circle r="180" fill="none" stroke="#334155" stroke-width="2" />
+    <circle r="130" fill="none" stroke="#475569" stroke-width="4" stroke-dasharray="12 16" />
+    <circle r="80" fill="none" stroke="#64748b" stroke-width="2" opacity="0.5" />
+  </g>
+
+  <!-- The Needle -->
+  <g transform="rotate(45 256 256)">
+    <!-- Needle Body -->
+    <path d="M252 80 L260 80 L266 380 L256 440 L246 380 Z" fill="url(#needleGradient)" filter="url(#glow)" />
+    <!-- Needle Eye -->
+    <ellipse cx="256" cy="130" rx="3" ry="16" fill="#0f172a" />
+    <!-- Highlight Reflection -->
+    <path d="M254 90 L256 90 L258 350 L256 360 L254 350 Z" fill="#ffffff" opacity="0.4" />
+  </g>
+
+  <!-- The Signal (The found item / Buying Signal) -->
+  <g transform="translate(320, 160)" filter="url(#glowStrong)">
+    <circle cx="0" cy="0" r="16" fill="url(#signalGradient)" />
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#22c55e" stroke-width="4" opacity="0.6" />
+    <circle cx="0" cy="0" r="48" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6 6" opacity="0.3" />
+  </g>
+</svg>

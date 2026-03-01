@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "score_threshold": 5,
+    "recent_hours": 24,
+    "seen_ttl_days": 7,
+    "search_time": "week",
+    "max_results": 10,
+    "relevance_keywords": [
+      ["invoice", 3], ["billing", 3], ["timesheet", 3], ["invoicing", 3],
+      ["forgot to log", 3], ["track hours", 3], ["client hours", 3],
+      ["freelance", 2], ["contractor", 2], ["spreadsheet", 2], ["excel", 2],
+      ["manual", 2], ["tracking", 2], ["chaos", 2], ["lost track", 2],
+      ["billable", 2], ["unpaid", 2], ["timer", 2],
+      ["small business", 1], ["tool", 1], ["recommend", 1], ["app", 1], ["software", 1]
+    ],
+    "skip_patterns": [
+      "\\[hiring\\]", "\\[job\\]", "job posting", "we're hiring",
+      "for sale", "selling", "buy my", "check out my",
+      "i made this", "launched", "introducing", "promocode"
+    ]
+  },
+
+  "from_email": "scout@yourdomain.com",
+  "to_email": "you@yourdomain.com",
+  "repo_url": "https://github.com/Repleno/needle",
+
+  "keyword_searches": [
+    "track client hours spreadsheet",
+    "freelance invoicing chaos",
+    "forgot to log hours",
+    "manual time tracking",
+    "invoice what do you use",
+    "time tracking recommend",
+    "billing clients any tips",
+    "timesheet tool small business"
+  ],
+
+  "subreddits": [
+    ["freelance", 20],
+    ["smallbusiness", 15],
+    ["consulting", 15],
+    ["Accounting", 15],
+    ["indiehackers", 10],
+    ["entrepreneur", 10]
+  ]
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>needle · setup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .tag { display:inline-flex; align-items:center; gap:4px; background:#ede9fe; color:#5b21b6; font-size:13px; padding:3px 10px; border-radius:99px; }
+    .tag button { color:#7c3aed; line-height:1; font-size:15px; padding:0 2px; }
+    .tag button:hover { color:#4c1d95; }
+    input[type=number]::-webkit-inner-spin-button { opacity:1; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="border-b border-slate-200 bg-white sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.svg" alt="needle logo" class="w-10 h-10">
+        <div>
+          <h1 class="text-xl font-semibold text-indigo-600">needle</h1>
+          <p class="text-xs text-slate-400 mt-0.5">config editor</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <label class="cursor-pointer px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+          Import config.json
+          <input type="file" accept=".json" class="hidden" onchange="importConfig(this)">
+        </label>
+        <button onclick="exportConfig()" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+          Save config.json
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- No-config banner -->
+  <div id="no-config-banner" class="bg-amber-50 border-b border-amber-200">
+    <div class="max-w-2xl mx-auto px-6 py-3 flex items-center gap-3">
+      <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <p class="text-sm text-amber-700">No config loaded — showing defaults. Click <strong>Import config.json</strong> to load your existing config.</p>
+    </div>
+  </div>
+
+  <!-- Config-loaded banner -->
+  <div id="config-loaded-banner" class="bg-green-50 border-b border-green-200 hidden">
+    <div class="max-w-2xl mx-auto px-6 py-3 flex items-center gap-3">
+      <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <p class="text-sm text-green-700">Config loaded. Make your changes, click <strong>Save config.json</strong>, then overwrite the file in your repo and push.</p>
+    </div>
+  </div>
+
+  <div class="max-w-2xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- Settings -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h2 class="font-medium text-slate-800">Settings</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Tune how the scanner filters and ranks posts</p>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-2 gap-4">
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Score threshold</label>
+          <input id="score_threshold" type="number" min="1" max="20" value="5"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <p class="text-xs text-slate-400 mt-1">Posts below this score are hidden</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Recent hours</label>
+          <input id="recent_hours" type="number" min="6" max="72" value="24"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <p class="text-xs text-slate-400 mt-1">Only show posts from the last N hours</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Seen TTL (days)</label>
+          <input id="seen_ttl_days" type="number" min="1" max="30" value="7"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <p class="text-xs text-slate-400 mt-1">Sent posts won't reappear for N days</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Max results</label>
+          <input id="max_results" type="number" min="1" max="25" value="10"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <p class="text-xs text-slate-400 mt-1">Max posts per email report</p>
+        </div>
+
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Search time range</label>
+          <select id="search_time"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+            <option value="day">Past day</option>
+            <option value="week" selected>Past week</option>
+            <option value="month">Past month</option>
+            <option value="year">Past year</option>
+            <option value="all">All time</option>
+          </select>
+          <p class="text-xs text-slate-400 mt-1">Time window for Reddit keyword searches</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Keyword Searches -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h2 class="font-medium text-slate-800">Keyword searches</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Phrases sent to Reddit's search API. Use pain-point language — how someone describes the problem, not the solution.</p>
+      </div>
+      <div class="px-6 py-5">
+        <div id="keyword-tags" class="flex flex-wrap gap-2 mb-3 min-h-[32px]"></div>
+        <div class="flex gap-2">
+          <input id="keyword-input" type="text" placeholder="e.g. forgot to reorder supplies"
+            class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            onkeydown="if(event.key==='Enter'){addKeyword();event.preventDefault()}">
+          <button onclick="addKeyword()" class="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition text-slate-600">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subreddits -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h2 class="font-medium text-slate-800">Subreddits</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Scanned via /new. Limit = how many recent posts to fetch (max 100).</p>
+      </div>
+      <div class="px-6 py-5">
+        <div id="subreddit-list" class="space-y-2 mb-3"></div>
+        <div class="flex gap-2">
+          <span class="text-sm text-slate-400 self-center">r/</span>
+          <input id="sub-input" type="text" placeholder="subredditname"
+            class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            onkeydown="if(event.key==='Enter'){addSubreddit();event.preventDefault()}">
+          <input id="sub-limit" type="number" min="5" max="100" value="15" placeholder="limit"
+            class="w-20 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 text-center">
+          <button onclick="addSubreddit()" class="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition text-slate-600">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h2 class="font-medium text-slate-800">Email</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Fallback values — overridden by <code class="bg-slate-100 px-1 rounded">FROM_EMAIL</code> and <code class="bg-slate-100 px-1 rounded">TO_EMAIL</code> env vars / GitHub Variables.</p>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">From email</label>
+          <input id="from_email" type="email" placeholder="scout@yourdomain.com"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">To email</label>
+          <input id="to_email" type="email" placeholder="you@yourdomain.com"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+      </div>
+    </div>
+
+    <!-- Download CTA -->
+    <div class="flex justify-between items-center pb-12 pt-4 border-t border-slate-200 mt-8">
+      <a href="https://github.com/Repleno/needl" target="_blank" class="text-xs text-slate-400 hover:text-indigo-500 transition flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        needle
+      </a>
+      <button onclick="exportConfig()" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+        Save config.json
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── State ──────────────────────────────────────────────────────────────────
+    let keywords      = [];
+    let subreddits    = [];
+    let _extraSettings = {};  // settings fields not exposed in the UI (e.g. relevance_keywords, skip_patterns)
+
+    // ── Init with defaults ─────────────────────────────────────────────────────
+    const DEFAULT = {
+      settings: { score_threshold: 5, recent_hours: 24, seen_ttl_days: 7, search_time: "week", max_results: 10 },
+      from_email: "",
+      to_email: "",
+      keyword_searches: [],
+      subreddits: []
+    };
+    loadState(DEFAULT);
+
+    // ── Import ─────────────────────────────────────────────────────────────────
+    function importConfig(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const cfg = JSON.parse(e.target.result);
+          loadState(cfg);
+          document.getElementById("no-config-banner").classList.add("hidden");
+          document.getElementById("config-loaded-banner").classList.remove("hidden");
+        } catch {
+          alert("Could not parse config.json — make sure it's valid JSON.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function loadState(cfg) {
+      const s = cfg.settings || {};
+      document.getElementById("score_threshold").value = s.score_threshold ?? 5;
+      document.getElementById("recent_hours").value    = s.recent_hours    ?? 24;
+      document.getElementById("seen_ttl_days").value   = s.seen_ttl_days   ?? 7;
+      document.getElementById("max_results").value     = s.max_results     ?? 10;
+      document.getElementById("search_time").value     = s.search_time     ?? "week";
+      document.getElementById("from_email").value      = cfg.from_email    ?? "";
+      document.getElementById("to_email").value        = cfg.to_email      ?? "";
+
+      // Preserve settings fields that have no UI control (e.g. relevance_keywords, skip_patterns)
+      const UI_SETTINGS = new Set(["score_threshold", "recent_hours", "seen_ttl_days", "max_results", "search_time"]);
+      _extraSettings = Object.fromEntries(Object.entries(s).filter(([k]) => !UI_SETTINGS.has(k)));
+
+      keywords   = [...(cfg.keyword_searches || [])];
+      subreddits = [...(cfg.subreddits       || [])];
+      renderKeywords();
+      renderSubreddits();
+    }
+
+    // ── Keywords ───────────────────────────────────────────────────────────────
+    function renderKeywords() {
+      const el = document.getElementById("keyword-tags");
+      el.innerHTML = keywords.map((kw, i) => `
+        <span class="tag">${kw}
+          <button onclick="removeKeyword(${i})" title="Remove">×</button>
+        </span>`).join("");
+    }
+
+    function addKeyword() {
+      const input = document.getElementById("keyword-input");
+      const val   = input.value.trim();
+      if (val && !keywords.includes(val)) {
+        keywords.push(val);
+        renderKeywords();
+      }
+      input.value = "";
+      input.focus();
+    }
+
+    function removeKeyword(i) {
+      keywords.splice(i, 1);
+      renderKeywords();
+    }
+
+    // ── Subreddits ─────────────────────────────────────────────────────────────
+    function renderSubreddits() {
+      const el = document.getElementById("subreddit-list");
+      if (!subreddits.length) {
+        el.innerHTML = `<p class="text-sm text-slate-400 italic">No subreddits added yet.</p>`;
+        return;
+      }
+      el.innerHTML = subreddits.map(([name, limit], i) => `
+        <div class="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
+          <span class="text-xs text-slate-400">r/</span>
+          <span class="flex-1 text-sm text-slate-700">${name}</span>
+          <input type="number" min="5" max="100" value="${limit}"
+            onchange="subreddits[${i}][1]=parseInt(this.value)||15"
+            class="w-16 border border-slate-200 rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <span class="text-xs text-slate-400">posts</span>
+          <button onclick="removeSubreddit(${i})" class="text-slate-300 hover:text-red-400 transition text-lg leading-none">×</button>
+        </div>`).join("");
+    }
+
+    function addSubreddit() {
+      const nameInput  = document.getElementById("sub-input");
+      const limitInput = document.getElementById("sub-limit");
+      const name  = nameInput.value.trim().replace(/^r\//, "");
+      const limit = parseInt(limitInput.value) || 15;
+      if (name && !subreddits.find(s => s[0] === name)) {
+        subreddits.push([name, limit]);
+        renderSubreddits();
+      }
+      nameInput.value  = "";
+      nameInput.focus();
+    }
+
+    function removeSubreddit(i) {
+      subreddits.splice(i, 1);
+      renderSubreddits();
+    }
+
+    // ── Export ─────────────────────────────────────────────────────────────────
+    function exportConfig() {
+      const config = {
+        settings: {
+          ..._extraSettings,  // preserve non-UI fields (relevance_keywords, skip_patterns, etc.)
+          score_threshold: parseInt(document.getElementById("score_threshold").value) || 5,
+          recent_hours:    parseInt(document.getElementById("recent_hours").value)    || 24,
+          seen_ttl_days:   parseInt(document.getElementById("seen_ttl_days").value)   || 7,
+          search_time:     document.getElementById("search_time").value,
+          max_results:     parseInt(document.getElementById("max_results").value)     || 10,
+        },
+        from_email:      document.getElementById("from_email").value || "scout@yourdomain.com",
+        to_email:        document.getElementById("to_email").value   || "you@yourdomain.com",
+        keyword_searches: keywords,
+        subreddits:       subreddits,
+      };
+
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
+      const a    = document.createElement("a");
+      a.href     = URL.createObjectURL(blob);
+      a.download = "config.json";
+      a.click();
+    }
+  </script>
+
+</body>
+</html>
