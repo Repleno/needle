@@ -1,11 +1,11 @@
 # needle Agent Context
 
 ## Purpose
-Reddit scout for buying signals. Scans, scores, and emails reports via Brevo.
+Reddit scout for buying signals. Scans, scores, and writes HTML reports locally (default) or sends via Brevo (output_mode=email).
 
 ## Tech Stack
 - **Python 3.8+**: Strictly **Standard Library only** (no `requests`, `praw`, etc.).
-- **Data**: `config.json` (config), `seen_posts.json` (deduplication).
+- **Data**: `config.json` (config), `seen_posts.json` (deduplication), `reports/` (local HTML history).
 
 ## Core Rules
 1. **Zero Dependencies**: Use `urllib` and `json`. Do not add external packages.
