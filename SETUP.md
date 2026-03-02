@@ -12,12 +12,9 @@ If a URL is provided, crawl it and extract:
 Use this to suggest 6–10 `keyword_searches` (pain language, not solution language) and 4–6 subreddits. Update `config.json` accordingly.
 
 ## Step 2 — Credentials
-Tell the user to run:
-```bash
-cp .env.example .env.local
-chmod 600 .env.local
-```
-Then open `.env.local` and fill in `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`.
+Local mode is the default — no credentials needed. Skip to Step 3.
+
+If you want email delivery, set `output_mode`: "email" in `config.json`, then create `.env.local` with `BREVO_API_KEY`, `FROM_EMAIL`, `TO_EMAIL`.
 
 **NEVER read `.env.local` or any credential file. Never ask the user to paste a key into the chat. Credentials are the user's responsibility — your job ends at telling them which file to edit.**
 

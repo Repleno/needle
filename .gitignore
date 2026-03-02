@@ -1,6 +1,7 @@
 # Runtime state — persists locally, not committed
 seen_posts.json
 run.log
+reports/
 
 # Python
 __pycache__/

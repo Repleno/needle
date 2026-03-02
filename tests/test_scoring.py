@@ -366,8 +366,11 @@ class TestConfigValidation(unittest.TestCase):
         self.assertEqual(len(errors), 0)
 
     def test_missing_email_error(self):
-        """Verify missing email produces error."""
-        cfg = {"keyword_searches": ["test"]}
+        """Verify missing email produces error for output_mode=email."""
+        cfg = {
+            "keyword_searches": ["test"],
+            "settings": {"output_mode": "email"}
+        }
         errors = validate_config(cfg)
         self.assertTrue(any("from_email" in e for e in errors))
         self.assertTrue(any("to_email" in e for e in errors))

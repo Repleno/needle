@@ -7,7 +7,7 @@
 > Find the needle in the haystack. Daily Reddit scanner that surfaces buying signals before people know they need you.
 
 Runs locally via cron — no cloud, no IP blocks.
-Results land in your inbox every morning as an email report with a clean, branded UI.
+Results are saved as a local HTML report (default) or sent to your inbox via Brevo.
 
 ---
 
@@ -21,7 +21,7 @@ It's not a SaaS. It's a script that runs on your machine. No monthly subscriptio
 
 Reddit is full of people who are describing your problem right now. Not in a product forum. Not on your landing page. In a real conversation with other founders, freelancers, or professionals — before they even know a solution exists.
 
-needle finds these posts automatically every morning and sends them to you by email.
+needle finds these posts automatically every morning and alerts you locally (desktop notification + HTML report) or via email.
 
 Your job: show up, answer as an expert, not as a salesperson.
 
@@ -48,7 +48,7 @@ Or let your AI assistant handle the setup — just point it at `SETUP.md`.
 - Linux or macOS machine that's on during the day
 - Python 3.8+
 - **Zero external dependencies:** Uses only the Python Standard Library (no `pip install` required).
-- Brevo account (free, 300 emails/day)
+- **Optional:** Brevo account (free, 300 emails/day) — if you want email delivery.
 
 ---
 
@@ -61,13 +61,15 @@ git clone https://github.com/Repleno/needle.git
 cd needle
 ```
 
-### 2. Set up Brevo
+### 2. Optional: Set up Brevo (for email delivery)
+
+If you just want a local HTML report and desktop notifications, **skip to Step 4**.
 
 1. Create an account at [brevo.com](https://brevo.com) (free)
 2. Verify a sender email: **Settings → Senders & IPs → Add a sender**
 3. Get your API key: **Settings → API Keys → Generate a new API key**
 
-### 3. Configure credentials
+### 3. Optional: Configure credentials (for email delivery)
 
 ```bash
 cp .env.example .env.local
@@ -81,6 +83,8 @@ BREVO_API_KEY="xkeysib-..."        # Brevo API key
 FROM_EMAIL="scout@yourdomain.com"  # verified sender address in Brevo
 TO_EMAIL="you@yourdomain.com"      # where reports are sent
 ```
+
+Finally, set `"output_mode": "email"` in your `config.json`.
 
 ### 4. Customize keywords — **this is the most important step**
 
@@ -133,11 +137,13 @@ Add this line — `run.sh` sends once per day and retries on failure.
 ./run.sh
 ```
 
-Check `run.log` for output. You should receive the first email within seconds.
+Check `run.log` for output. A desktop notification will appear, and `report.html` will be created in your needle folder. By default, it will also auto-open in your browser.
 
 ---
 
 ## Reading the report
+
+By default, needle saves an HTML report in the project root (`report.html`) and sends a desktop notification. If you've configured email mode, you'll receive the report in your inbox.
 
 Each post gets a score based on weighted keywords in title, body, and subreddit. **The best part: You define the scoring logic yourself.** By adjusting keywords and weights in your config, you train the engine to find exactly what you're looking for.
 
@@ -152,7 +158,7 @@ Each post gets a score based on weighted keywords in title, body, and subreddit.
 - **Skip patterns:** Posts matching `[hiring]`, `for sale`, etc. are ignored.
 - **Deduplication:** Same post won't appear again for 7 days.
 
-On quiet days you still get a "Quiet day" email — so you know the scout ran.
+On quiet days you still get a "Quiet day" report — so you know the scout ran.
 
 ---
 
@@ -242,13 +248,14 @@ What can realistically happen:
 To stay in the clear: keep your cron to 1–3 runs per day, don't remove the `time.sleep()` calls between requests, and don't run needle from cloud IP ranges (GitHub Actions, AWS, etc.) — those get blocked anyway.
 
 **Does it cost anything?**
-The script itself is free. Brevo: free up to 300 emails/day.
+The script itself is free. Local mode (HTML + Notifications) costs nothing.
+**Brevo (optional):** Free up to 300 emails/day.
 
 **Why local instead of GitHub Actions?**
 Reddit blocks GitHub Actions IP ranges with HTTP 403. Running locally avoids this.
 
 **What if nothing is found on a given day?**
-You still get a "Quiet day" email — so you know the scout ran. Tune your keywords, add different subs, or lower your threshold.
+You still get a "Quiet day" notification/report — so you know the scout ran. Tune your keywords, add different subs, or lower your threshold.
 
 ---
 

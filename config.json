@@ -1,5 +1,7 @@
 {
   "settings": {
+    "output_mode": "local",
+    "auto_open": true,
     "score_threshold": 5,
     "recent_hours": 24,
     "seen_ttl_days": 7,

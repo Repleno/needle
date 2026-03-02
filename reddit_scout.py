@@ -2,8 +2,8 @@
 """
 Reddit Outreach Scout
 =====================
-Scans Reddit daily for buying signals and pain points, sends an email report.
-Runs locally via cron. Results land in your inbox every morning.
+Scans Reddit daily for buying signals and pain points, writes an HTML report.
+Runs locally via cron. Results appear as a desktop notification + report.html.
 
 ARCHITECTURE:
   1. keyword_searches (from config.json) are sent to Reddit's search API (t=week).
@@ -12,8 +12,8 @@ ARCHITECTURE:
   4. Posts below SCORE_THRESHOLD or older than RECENT_HOURS are discarded.
   5. SKIP_PATTERNS filter out job postings, self-promo, etc. (score = -1).
   6. Astroturfing detection penalizes fake product recommendations (-5).
-  7. Only posts that make it into the email are marked as "seen" (TTL: SEEN_TTL_DAYS).
-  8. Results are sent as an HTML email via Brevo API.
+  7. Only posts that make it into the report are marked as "seen" (TTL: SEEN_TTL_DAYS).
+  8. Results are written to report.html; optionally sent via Brevo (output_mode=email).
 
 HOW TO CUSTOMIZE:
   - To change WHAT is searched: edit keyword_searches in config.json
@@ -48,6 +48,8 @@ SEEN_FILE   = BASE_DIR / "seen_posts.json"
 
 # ── Default settings (overridden by config.json) ─────────────────────────────
 DEFAULT_SETTINGS = {
+    "output_mode": "local",    # "local" (HTML report) or "email" (Brevo)
+    "auto_open": True,         # Auto-open HTML report in browser (local mode only)
     "score_threshold": 5,      # Minimum score for a post to appear in the report
     "recent_hours": 24,        # Only show posts created within this window
     "seen_ttl_days": 7,        # Sent posts won't reappear for this many days
@@ -208,11 +210,12 @@ def validate_config(cfg: dict) -> list[str]:
     if _s.get("search_time", "week") not in ("hour", "day", "week", "month", "year", "all"):
         errors.append("settings.search_time must be one of: hour, day, week, month, year, all")
 
-    # Validate email
-    if not cfg.get("from_email"):
-        errors.append("from_email is required (set via FROM_EMAIL env var or config.json)")
-    if not cfg.get("to_email"):
-        errors.append("to_email is required (set via TO_EMAIL env var or config.json)")
+    # Validate email (only if output_mode is "email")
+    if _s.get("output_mode", "local") == "email":
+        if not cfg.get("from_email"):
+            errors.append("from_email is required for output_mode=email (set via FROM_EMAIL env var or config.json)")
+        if not cfg.get("to_email"):
+            errors.append("to_email is required for output_mode=email (set via TO_EMAIL env var or config.json)")
 
     # Validate arrays
     if not cfg.get("keyword_searches") and not cfg.get("subreddits"):
@@ -233,13 +236,15 @@ def load_config() -> dict:
     cfg["from_email"] = os.environ.get("FROM_EMAIL", cfg.get("from_email", ""))
     cfg["to_email"]   = os.environ.get("TO_EMAIL",   cfg.get("to_email", ""))
 
-    # Brevo API key: ONLY from env var, never from config.json
-    api_key = os.environ.get("BREVO_API_KEY", "")
-    if not api_key:
-        print("ERROR: Environment variable BREVO_API_KEY is not set.")
-        print("Set it in .env.local or export BREVO_API_KEY='xkeysib-...'")
-        sys.exit(1)
-    cfg["brevo_api_key"] = api_key
+    # Brevo API key: ONLY if output_mode=email, from env var
+    output_mode = cfg.get("settings", {}).get("output_mode", "local")
+    if output_mode == "email":
+        api_key = os.environ.get("BREVO_API_KEY", "")
+        if not api_key:
+            print("ERROR: Environment variable BREVO_API_KEY is not set.")
+            print("Set it in .env.local or export BREVO_API_KEY='xkeysib-...'")
+            sys.exit(1)
+        cfg["brevo_api_key"] = api_key
 
     # Validate config
     errors = validate_config(cfg)
@@ -573,6 +578,39 @@ def send_email(cfg: dict, subject: str, html: str, max_retries: int = 3) -> bool
     return False
 
 
+def write_report_html(html: str, path: Path):
+    """Write the HTML report to a file."""
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+
+def notify_desktop(count: int, report_path: Path):
+    """Send desktop notification. Fails silently if notify-send/osascript unavailable."""
+    import subprocess
+    title = f"needle · {count} signal{'s' if count != 1 else ''} found"
+    body = str(report_path)
+    try:
+        if sys.platform == "darwin":
+            subprocess.run(
+                ["osascript", "-e", f'display notification "{body}" with title "{title}"'],
+                capture_output=True, timeout=5
+            )
+        else:
+            subprocess.run(["notify-send", "-t", "10000", title, body], capture_output=True, timeout=5)
+    except (FileNotFoundError, OSError):
+        pass  # notify tool not available — silent fail
+
+
+def open_report(path: Path):
+    """Open report.html in the default browser. Fails silently."""
+    import subprocess
+    cmd = "open" if sys.platform == "darwin" else "xdg-open"
+    try:
+        subprocess.run([cmd, str(path)], capture_output=True, timeout=5)
+    except (FileNotFoundError, OSError):
+        pass
+
+
 def main():
     """Main entry point: collect posts, score, filter, and send email report."""
     log("=" * 50)
@@ -582,6 +620,8 @@ def main():
     # Build settings from defaults + config.json overrides
     _s = cfg.get("settings", {})
     settings = {
+        "output_mode":     _s.get("output_mode",     DEFAULT_SETTINGS["output_mode"]),
+        "auto_open":       _s.get("auto_open",       DEFAULT_SETTINGS["auto_open"]),
         "score_threshold": _s.get("score_threshold", DEFAULT_SETTINGS["score_threshold"]),
         "recent_hours":    _s.get("recent_hours",    DEFAULT_SETTINGS["recent_hours"]),
         "seen_ttl_days":   _s.get("seen_ttl_days",   DEFAULT_SETTINGS["seen_ttl_days"]),
@@ -612,14 +652,28 @@ def main():
     save_seen(new_seen)
 
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    subject  = (
-        f"needle · {date_str} — {len(top_posts)} signal{'s' if len(top_posts) != 1 else ''} found"
-        if top_posts else
-        f"needle · {date_str} — quiet day"
-    )
     repo_url = cfg.get("repo_url", "")
     html = format_email_html(top_posts, date_str, repo_url)
-    send_email(cfg, subject, html)
+
+    output_mode = settings["output_mode"]
+    if output_mode == "email":
+        subject = (
+            f"needle · {date_str} — {len(top_posts)} signal{'s' if len(top_posts) != 1 else ''} found"
+            if top_posts else
+            f"needle · {date_str} — quiet day"
+        )
+        send_email(cfg, subject, html)
+    else:
+        reports_dir = BASE_DIR / "reports"
+        reports_dir.mkdir(exist_ok=True)
+        needle_word = "needle" if len(top_posts) == 1 else "needles"
+        report_path = reports_dir / f"{date_str}-found-{len(top_posts)}-{needle_word}.html"
+        write_report_html(html, report_path)
+        log(f"Report written → {report_path}")
+        if top_posts:
+            notify_desktop(len(top_posts), report_path)
+            if settings["auto_open"]:
+                open_report(report_path)
 
     log("Reddit Outreach Scout finished")
     log("=" * 50)
